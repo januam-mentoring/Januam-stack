@@ -1,0 +1,84 @@
+version: "3.7"
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/data/postgres
+      - postgres_log:/etc/postgresql
+    env_file:
+      - docker.env
+    networks:
+      - januam-stack
+
+  pgadmin:
+    links:
+      - postgres:postgres
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin_data:/root/.pgadmin
+    env_file:
+      - docker.env
+    networks:
+      - januam-stack
+  api:
+    container_name: api
+    build:
+      context: ../januam-api
+      target: development
+    volumes:
+      - ../januam-api:/src/app
+      - ../januam-api/src/app/node_modules
+    command: npm run start:dev
+    depends_on:
+      - postgres
+      - pgadmin
+    ports:
+      - "3001:3001"
+    env_file:
+      - ../januam-api/.env.stage.dev
+    networks:
+      - januam-stack
+
+  client:
+    ports:
+      - "3000:3000"
+    build:
+      context: ../januam-frontend
+      dockerfile: Dockerfile
+    volumes:
+      - ../januam-frontend/:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - api
+    networks:
+      - januam-stack
+    restart: always
+
+  nginx:
+    depends_on:
+      - api
+      - client
+    restart: always
+    build:
+      dockerfile: Dockerfile
+      context: ./nginx
+    ports:
+      - "80:80"
+    networks:
+      - januam-stack
+volumes:
+  postgres_data:
+  postgres_log:
+  pgadmin_data:
+
+
+networks:
+  januam-stack:
+    driver: bridge
