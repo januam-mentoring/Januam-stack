@@ -13,7 +13,7 @@ services:
       - ./environment/docker.env
     networks:
       - januam-stack
-
+      
   pgadmin:
     links:
       - postgres:postgres
@@ -29,39 +29,30 @@ services:
       - januam-stack
   api:
     container_name: api
-    build:
-      context: ../januam-api
-      target: development
-    volumes:
-      - ../januam-api:/src/app
-      - /src/app/node_modules
-    command: npm run start:dev
+    image: dockerailor/api
     depends_on:
       - postgres
       - pgadmin
     ports:
       - "3001:3001"
     env_file:
-      - ./environment/api.dev.env
+      - ./environment/api.prod.env
+    volumes:
+      - /src/app/node_modules
     networks:
       - januam-stack
 
   client:
     ports:
       - "3000:3000"
-    build:
-      context: ../januam-frontend
-      dockerfile: Dockerfile
-      target: development
-    command: yarn dev
-    volumes:
-      - ../januam-frontend/:/app
-      - /app/node_modules
-      - /app/.next
+    image: dockerailor/client
     depends_on:
       - api
     networks:
       - januam-stack
+    volumes:
+      - /app/node_modules
+      - /app/.next
     restart: always
 
   nginx:
@@ -76,7 +67,6 @@ services:
       - "80:80"
     networks:
       - januam-stack
-
 networks:
   januam-stack:
     driver: bridge
