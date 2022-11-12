@@ -31,7 +31,7 @@ services:
     container_name: api
     build:
       context: ../januam-api
-      target: development
+      target: production
     volumes:
       - ../januam-api:/src/app
       - /src/app/node_modules
@@ -52,8 +52,6 @@ services:
     build:
       context: ../januam-frontend
       dockerfile: Dockerfile
-      target: development
-    command: yarn dev
     volumes:
       - ../januam-frontend/:/app
       - /app/node_modules

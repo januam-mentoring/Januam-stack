@@ -6,67 +6,48 @@ services:
     ports:
       - "5432:5432"
     volumes:
-    - ./data/postgres:/data/postgres
-    - ./log:/etc/postgresql
-    - ./etc:/docker-entrypoint-initdb./
+      - /dizin/data:/var/lib/postgresql/data
     env_file:
       - ./environment/docker.env
     networks:
       - januam-stack
-      
-  pgadmin:
-    links:
-      - postgres:postgres
-    container_name: pgadmin
-    image: dpage/pgadmin4
-    ports:
-      - "8080:80"
-    volumes:
-    - ./data/pgadmin:/root/.pgadmin
-    env_file:
-      - ./environment/docker.env
-    networks:
-      - januam-stack
-  api:
-    container_name: api
-    image: dockerailor/api
+
+  januam-api:
+    container_name: januam-api
+    image: januam/januam-api
     depends_on:
       - postgres
-      - pgadmin
     ports:
       - "3001:3001"
     env_file:
-      - ./environment/api.prod.env
-    volumes:
-      - /src/app/node_modules
+      - ./environment/api.dev.env
     networks:
       - januam-stack
+    restart: always
 
-  client:
+  januam-client:
+    container_name: januam-client
+    image: januam/januam-client
+    depends_on:
+      - januam-api
     ports:
       - "3000:3000"
-    image: dockerailor/client
-    depends_on:
-      - api
     networks:
       - januam-stack
-    volumes:
-      - /app/node_modules
-      - /app/.next
     restart: always
 
-  nginx:
+  janaum-nginx:
+    container_name: janaum-nginx
+    image: januam/janaum-nginx
     depends_on:
-      - api
-      - client
-    restart: always
-    build:
-      dockerfile: Dockerfile
-      context: ./nginx
+      - januam-api
+      - januma-client
     ports:
       - "80:80"
     networks:
       - januam-stack
+    restart: always
+    
 networks:
   januam-stack:
     driver: bridge
