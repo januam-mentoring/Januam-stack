@@ -39,6 +39,9 @@ services:
   janaum-nginx:
     container_name: janaum-nginx
     image: januam/janaum-nginx
+    build:
+      dockerfile: Dockerfile
+      context: ./nginx
     depends_on:
       - januam-api
       - januma-client
